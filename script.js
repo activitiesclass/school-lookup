@@ -1,21 +1,299 @@
-(()=>{
-'use strict';
-const $=id=>document.getElementById(id);
-const input=$('studentName'),form=$('searchForm'),message=$('messageBox');
-let busy=false,selected=null;
-function normalize(text){return text.normalize('NFKC').replace(/[\u064B-\u065F\u0670\u06D6-\u06EDـ]/g,'').replace(/[أإآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ؤ/g,'و').replace(/ئ/g,'ي').replace(/ء/g,'').replace(/[^\u0621-\u064A\s]/g,' ').replace(/(^|\s)بن(?=\s|$)/g,' ').replace(/عبد\s+الله/g,'عبدالله').replace(/\s+/g,' ').trim();}
-function findMatches(name){const parts=normalize(name).split(' ');if(parts.length<3)return [];return studentsData.filter(student=>{const tokens=normalize(student.name).split(' ');let pos=0;for(const part of parts){const index=tokens.indexOf(part,pos);if(index<0)return false;pos=index+1;}return true;});}
-function showMessage(text,info=false){message.textContent=text;message.className='message'+(info?' info':'');message.hidden=false;input.setAttribute('aria-invalid',String(!info));}
-function clearMessage(){message.hidden=true;message.textContent='';input.removeAttribute('aria-invalid');}
-function setBusy(value){busy=value;$('searchBtn').disabled=value;$('spinner').hidden=!value;$('searchArrow').hidden=value;$('searchLabel').textContent=value?'جارٍ البحث…':'اعرض الصف والشعبة';form.setAttribute('aria-busy',String(value));document.querySelectorAll('[data-example]').forEach(button=>button.disabled=value);}
-form.addEventListener('submit',async event=>{event.preventDefault();if(busy)return;clearMessage();const name=input.value.trim();if(!name){showMessage('يرجى كتابة اسم الطالب أولًا.');input.focus();return;}if(normalize(name).split(' ').length<3){showMessage('أدخل ثلاثة أجزاء من الاسم على الأقل، بالترتيب.');input.focus();return;}
-setBusy(true);try{await new Promise(resolve=>requestAnimationFrame(resolve));const matches=findMatches(name);if(matches.length===0){showMessage('لم نجد اسمًا مطابقًا في بيانات العرض. تأكد من الاسم أو جرّب أحد الأسماء المقترحة.');input.focus();}else if(matches.length>1){showMessage('يوجد أكثر من طالب بهذا الاسم. أضف اسم العائلة لتمييز الطالب المطلوب.',true);input.focus();}else{selected=matches[0];$('resultName').textContent=selected.name;$('resultGrade').textContent=selected.grade;$('resultSection').textContent=selected.section;$('copyStatus').textContent='';$('searchCard').hidden=true;$('resultCard').hidden=false;$('resultCard').focus();}}catch{showMessage('تعذر إكمال البحث. يرجى المحاولة مرة أخرى.');}finally{setBusy(false);}});
-$('newSearchBtn').addEventListener('click',()=>{selected=null;form.reset();clearMessage();$('resultCard').hidden=true;$('searchCard').hidden=false;input.focus();});
-input.addEventListener('input',clearMessage);
-document.querySelectorAll('[data-example]').forEach(button=>button.addEventListener('click',()=>{input.value=button.dataset.example;form.requestSubmit();}));
-$('copyBtn').addEventListener('click',async()=>{if(!selected)return;try{await navigator.clipboard.writeText('دليلي المدرسي — بيانات تجريبية\n'+selected.name+'\nالصف: '+selected.grade+' | الشعبة: '+selected.section+'\nمدرسة الإبداع للتعليم الأساسي');$('copyStatus').textContent='تم نسخ النتيجة.';}catch{$('copyStatus').textContent='لم يتوفر النسخ التلقائي؛ يمكنك تحديد النص ونسخه.';}});
-$('year').textContent=new Intl.NumberFormat('ar-OM',{useGrouping:false}).format(new Date().getFullYear());
-const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-const voice=$('voiceBtn'),hint=$('nameHint');
-if(!Recognition){voice.disabled=true;voice.title='الكتابة بالصوت غير مدعومة في هذا المتصفح';}else{const recognition=new Recognition();recognition.lang='ar-OM';recognition.interimResults=false;recognition.maxAlternatives=1;voice.addEventListener('click',()=>{if(busy)return;clearMessage();try{recognition.start();}catch{showMessage('الميكروفون يعمل بالفعل. انطق الاسم بوضوح.',true);}});recognition.onstart=()=>{voice.classList.add('listening');hint.textContent='جارٍ الاستماع… انطق الاسم بوضوح.';};recognition.onresult=event=>{input.value=event.results[0][0].transcript.trim();clearMessage();hint.textContent='راجع الاسم الذي كُتب ثم اضغط على البحث.';input.focus();};recognition.onerror=event=>{showMessage(event.error==='not-allowed'||event.error==='service-not-allowed'?'اسمح باستخدام الميكروفون من إعدادات المتصفح، أو اكتب الاسم يدويًا.':'لم نتمكن من سماع الاسم. حاول مجددًا أو اكتبه يدويًا.',true);};recognition.onend=()=>{voice.classList.remove('listening');if(!input.value.trim())hint.textContent='يمكن كتابة الاسم مع كلمة «بن» أو بدونها.';};}
+/* ============================================================
+   script.js
+   منطق البحث عن بيانات الطالب - منتجات رقمية
+   ملاحظة: لا يتم حفظ أي بيانات في Local Storage، وكل شيء
+   يعمل في الذاكرة المؤقتة فقط أثناء الجلسة الحالية.
+   ============================================================ */
+
+(function () {
+  "use strict";
+
+  /* ------------------ عناصر الصفحة ------------------ */
+  const form           = document.getElementById("searchForm");
+  const nameInput      = document.getElementById("studentName");
+  const messageBox     = document.getElementById("messageBox");
+  const searchBtn      = document.getElementById("searchBtn");
+  const spinner        = document.getElementById("spinner");
+  const searchCard     = document.getElementById("searchCard");
+  const resultCard     = document.getElementById("resultCard");
+  const resultName     = document.getElementById("resultName");
+  const resultGrade    = document.getElementById("resultGrade");
+  const resultSection  = document.getElementById("resultSection");
+  const newSearchBtn   = document.getElementById("newSearchBtn");
+  const voiceBtn       = document.getElementById("voiceBtn");
+  const voiceHint      = document.getElementById("voiceHint");
+
+  /* ------------------ إعدادات الحماية ------------------ */
+  const MAX_ATTEMPTS = 20;     // عدد مريح من المحاولات المتتالية غير الناجحة
+  const LOCK_SECONDS = 10;     // قفل قصير بعد تجاوز الحد
+  let failedAttempts = 0;
+  let isLocked = false;
+
+  /* ============================================================
+     أدوات تطبيع النص العربي (لأغراض المطابقة فقط، لا تُعرض للمستخدم)
+     ============================================================ */
+
+  // إزالة التشكيل العربي (الفتحة، الضمة، الكسرة، السكون... إلخ)
+  function removeTashkeel(text) {
+    return text.replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, "");
+  }
+
+  // توحيد أشكال الهمزات والألف المقصورة لتفادي اختلاف الكتابة
+  function unifyHamza(text) {
+    return text
+      .replace(/[إأآا]/g, "ا")
+      .replace(/ى/g, "ي")
+      .replace(/ؤ/g, "و")
+      .replace(/ئ/g, "ي")
+      .replace(/ء/g, "");
+  }
+
+  // تطبيع كامل: إزالة تشكيل، توحيد همزات، إزالة مسافات زائدة، وتحويل لصيغة موحدة
+  function normalizeText(text) {
+    if (!text) return "";
+    let t = text.trim();
+    t = removeTashkeel(t);
+    t = unifyHamza(t);
+    t = t.replace(/[،؛؟,.!ـ-]/g, " ");
+    t = t.replace(/\s+/g, " ").trim();
+    // قبول الاسم مع كلمة «بن» أو بدونها، وتوحيد كتابة عبدالله.
+    t = t.replace(/(^|\s)بن(?=\s|$)/g, " ");
+    t = t.replace(/عبد\s+الله/g, "عبدالله");
+    t = t.replace(/ظ/g, "ض");
+    t = t.replace(/\s+/g, " ").trim();
+    return t;
+  }
+
+  /* ============================================================
+     منطق البحث
+     ============================================================ */
+
+  // إنشاء بصمة مشفرة من الاسم الكامل دون كشفه في ملف البيانات
+  async function createLookupKey(inputName) {
+    const value = normalizeText(inputName);
+    const bytes = new TextEncoder().encode(value);
+    const digest = await crypto.subtle.digest("SHA-256", bytes);
+    return Array.from(new Uint8Array(digest))
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("");
+  }
+
+  async function findMatches(inputName) {
+    const key = await createLookupKey(inputName);
+    return studentsData.filter((student) => student.keys.includes(key));
+  }
+
+  /* ============================================================
+     رسائل الواجهة
+     ============================================================ */
+
+  function showMessage(text, type) {
+    messageBox.textContent = text;
+    messageBox.className = "message-box show " + (type || "");
+  }
+
+  function clearMessage() {
+    messageBox.textContent = "";
+    messageBox.className = "message-box";
+  }
+
+  function markFieldError(field, isError) {
+    field.classList.toggle("input-error", !!isError);
+  }
+
+  function setLoading(isLoading) {
+    searchBtn.disabled = isLoading;
+    spinner.hidden = !isLoading;
+  }
+
+  /* ============================================================
+     عرض النتيجة
+     ============================================================ */
+
+  function showResult(student, enteredName) {
+    resultName.textContent = enteredName.trim().replace(/\s+/g, " ");
+    resultGrade.textContent = student.grade;
+    resultSection.textContent = student.section;
+
+    resultCard.hidden = false;
+    searchCard.hidden = true;
+
+    // تمرير تلقائي وسلس إلى بطاقة النتيجة
+    requestAnimationFrame(() => {
+      resultCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  function resetSearch() {
+    form.reset();
+    clearMessage();
+    markFieldError(nameInput, false);
+
+    resultCard.hidden = true;
+    searchCard.hidden = false;
+
+    requestAnimationFrame(() => {
+      searchCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      nameInput.focus();
+    });
+  }
+
+  /* ============================================================
+     القفل المؤقت بعد تجاوز عدد المحاولات
+     ============================================================ */
+
+  function lockSearchTemporarily() {
+    isLocked = true;
+    searchBtn.disabled = true;
+    let remaining = LOCK_SECONDS;
+
+    showMessage(
+      "لقد تجاوزت الحد المسموح به من المحاولات. يرجى المحاولة بعد " + remaining + " ثانية.",
+      ""
+    );
+
+    const timer = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        clearInterval(timer);
+        isLocked = false;
+        failedAttempts = 0;
+        searchBtn.disabled = false;
+        clearMessage();
+      } else {
+        showMessage(
+          "لقد تجاوزت الحد المسموح به من المحاولات. يرجى المحاولة بعد " + remaining + " ثانية.",
+          ""
+        );
+      }
+    }, 1000);
+  }
+
+  /* ============================================================
+     تنفيذ البحث
+     ============================================================ */
+
+  function performSearch() {
+    clearMessage();
+    markFieldError(nameInput, false);
+
+    const nameValue = nameInput.value;
+
+    // التحقق من الحقل الفارغ
+    if (!nameValue || !nameValue.trim()) {
+      showMessage("يرجى إدخال اسم الطالب.", "");
+      markFieldError(nameInput, true);
+      nameInput.focus();
+      return;
+    }
+
+    if (isLocked) {
+      return;
+    }
+
+    setLoading(true);
+
+    // مؤشر تحميل قصير لتحسين تجربة الانتظار (البحث محلي وفوري)
+    window.setTimeout(async () => {
+      try {
+        const matches = await findMatches(nameValue);
+
+        if (matches.length === 0) {
+          failedAttempts += 1;
+          showMessage(
+            "عذرًا، لم يتم العثور على طالب مطابق. يرجى التأكد من كتابة الاسم الكامل كما ورد في السجل المدرسي.",
+            ""
+          );
+          markFieldError(nameInput, true);
+
+          if (failedAttempts >= MAX_ATTEMPTS) {
+            lockSearchTemporarily();
+          }
+        } else if (matches.length > 1) {
+          showMessage(
+            "يوجد أكثر من طالب يتطابق مع هذا الاسم. يرجى إضافة جزء آخر من الاسم لتمييز الطالب المطلوب.",
+            "info"
+          );
+          nameInput.focus();
+        } else {
+          failedAttempts = 0;
+          clearMessage();
+          showResult(matches[0], nameValue);
+        }
+      } catch (err) {
+        showMessage("تعذر تنفيذ البحث حاليًا، يرجى المحاولة مرة أخرى.", "");
+      } finally {
+        setLoading(false);
+      }
+    }, 450);
+  }
+
+  /* ============================================================
+     ربط الأحداث
+     ============================================================ */
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault(); // منع إعادة تحميل الصفحة، ودعم تنفيذ البحث بزر Enter تلقائيًا
+    performSearch();
+  });
+
+  newSearchBtn.addEventListener("click", resetSearch);
+
+  // إزالة حالة الخطأ عند بدء الكتابة من جديد
+  nameInput.addEventListener("input", () => markFieldError(nameInput, false));
+
+  /* ============================================================
+     الكتابة بالصوت - تعمل في المتصفحات الداعمة مثل Chrome
+     ============================================================ */
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    voiceBtn.disabled = true;
+    voiceHint.textContent = "الكتابة بالصوت غير مدعومة في هذا المتصفح؛ يمكنك كتابة الاسم يدويًا.";
+  } else {
+    const recognition = new SpeechRecognition();
+    recognition.lang = "ar-OM";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    voiceBtn.addEventListener("click", () => {
+      clearMessage();
+      try {
+        recognition.start();
+      } catch (error) {
+        showMessage("الميكروفون يعمل بالفعل، يرجى نطق الاسم بوضوح.", "info");
+      }
+    });
+
+    recognition.onstart = () => {
+      voiceBtn.classList.add("listening");
+      voiceHint.textContent = "جارٍ الاستماع... انطق اسم الطالب الثلاثي بوضوح.";
+    };
+
+    recognition.onresult = (event) => {
+      const spokenName = event.results[0][0].transcript.trim();
+      nameInput.value = spokenName;
+      markFieldError(nameInput, false);
+      voiceHint.textContent = "تمت كتابة الاسم. راجعه ثم اضغط على «بحث».";
+      nameInput.focus();
+    };
+
+    recognition.onerror = (event) => {
+      const denied = event.error === "not-allowed" || event.error === "service-not-allowed";
+      showMessage(
+        denied
+          ? "يرجى السماح للموقع باستخدام الميكروفون لتفعيل البحث الصوتي."
+          : "لم أتمكن من سماع الاسم بوضوح، يرجى المحاولة مرة أخرى.",
+        ""
+      );
+    };
+
+    recognition.onend = () => {
+      voiceBtn.classList.remove("listening");
+      if (!nameInput.value.trim()) {
+        voiceHint.textContent = "يمكنك كتابة الاسم أو الضغط على الميكروفون ونطقه.";
+      }
+    };
+  }
 })();
+
