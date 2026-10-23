@@ -11,16 +11,35 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=original-1">
+  <script src="theme.js?v=themes-1"></script>
+  <link rel="stylesheet" href="style.css?v=themes-1">
   <link rel="icon" type="image/png" href="https://activitiesclass.github.io/digital-products/assets/logo.png">
 </head>
 <body>
 
   <!-- ==================== الرأس: الشعار واسم المدرسة ==================== -->
   <header class="site-header">
+    <div class="appearance-bar" aria-label="تخصيص المظهر">
+      <label for="themeSelect">اختر الثيم</label>
+      <select id="themeSelect" aria-label="اختر الثيم">
+        <option value="emerald">زمردي</option>
+        <option value="ocean">أزرق</option>
+        <option value="violet">بنفسجي</option>
+        <option value="night">ليلي</option>
+      </select>
+      <button id="motionToggle" class="motion-toggle" type="button" aria-label="إيقاف حركة الشعار" aria-pressed="false" title="إيقاف حركة الشعار"><span aria-hidden="true">Ⅱ</span></button>
+    </div>
     <div class="header-inner">
-      <img src="https://activitiesclass.github.io/digital-products/assets/logo.png" alt="شعار منتجات رقمية" class="school-logo">
-      <h2 class="school-name">منتجات رقمية</h2>
+      <div class="brand-demo logo-demo">
+        <button class="logo-button" type="button" data-hint="logoHint" aria-label="توضيح مكان شعار المدرسة" aria-describedby="logoHint" aria-expanded="false">
+          <img src="https://activitiesclass.github.io/digital-products/assets/logo.png" alt="شعار منتجات رقمية" class="school-logo">
+        </button>
+        <span class="brand-tooltip" id="logoHint" role="tooltip" hidden>هنا سيظهر شعار المدرسة</span>
+      </div>
+      <h2 class="school-name brand-demo name-demo">
+        <button class="school-name-button" type="button" data-hint="nameHint" aria-label="توضيح مكان اسم المدرسة" aria-describedby="nameHint" aria-expanded="false">منتجات رقمية</button>
+        <span class="brand-tooltip" id="nameHint" role="tooltip" hidden>هنا يُكتب اسم المدرسة</span>
+      </h2>
     </div>
   </header>
 
@@ -100,4 +119,5 @@
   <script src="script.js?v=original-1"></script>
 </body>
 </html>
+
 

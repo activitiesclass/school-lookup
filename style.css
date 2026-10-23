@@ -410,3 +410,69 @@ body {
   }
 }
 
+
+
+/* Appearance themes: preserve the reference page layout and search flow. */
+:root,html[data-theme="emerald"]{
+ --school-green:#17654f;--school-green-dark:#104333;--school-red:#cd3846;--school-red-dark:#a82030;
+ --page-top:#f4faf6;--page-bottom:#e6f1ec;--page-glow:#d8eee4;--banner-start:#123f35;--banner-end:#20765c;--banner-glow:#bce9cd26;
+ --card-bg:#fffefb;--text-main:#22382d;--text-muted:#626e65;--border-soft:#dce6dd;--field-bg:#fff;--result-bg:#f0f7f2;--result-border:#d4e7d9;
+ --name-start:#fff0bb;--name-end:#a7ebc8;--theme-light:#f0f9f2;--theme-dark:#1a4838;--focus:#efca75;
+}
+html[data-theme="ocean"]{
+ --school-green:#2563a6;--school-green-dark:#183f70;--school-red:#2563a6;--school-red-dark:#194a82;
+ --page-top:#f1f7ff;--page-bottom:#e1ecf9;--page-glow:#cbdef6;--banner-start:#112c50;--banner-end:#2a68a4;--banner-glow:#bddaff30;
+ --card-bg:#fcfdff;--text-main:#23354c;--text-muted:#5d6b7c;--border-soft:#d7e2ef;--field-bg:#fff;--result-bg:#eef4fc;--result-border:#d3e2f5;
+ --name-start:#fff4cb;--name-end:#a4daff;--theme-light:#edf5ff;--theme-dark:#244c79;--focus:#f2ce80;
+}
+html[data-theme="violet"]{
+ --school-green:#7551a7;--school-green-dark:#4d3475;--school-red:#8054b7;--school-red-dark:#633d92;
+ --page-top:#faf6ff;--page-bottom:#ece4f6;--page-glow:#dfcef3;--banner-start:#332448;--banner-end:#785098;--banner-glow:#e6cfff28;
+ --card-bg:#fffdfd;--text-main:#392d48;--text-muted:#74667e;--border-soft:#e4dbea;--field-bg:#fff;--result-bg:#f5effb;--result-border:#e2d6ee;
+ --name-start:#ffe8b3;--name-end:#e7baff;--theme-light:#fcf0ff;--theme-dark:#593975;--focus:#f3d493;
+}
+html[data-theme="night"]{
+ color-scheme:dark;--school-green:#9cd8c3;--school-green-dark:#c8eadc;--school-red:#326e5d;--school-red-dark:#285747;
+ --page-top:#111a24;--page-bottom:#192837;--page-glow:#294959;--banner-start:#0d1823;--banner-end:#263f51;--banner-glow:#a4e2dc1f;
+ --card-bg:#1d2a36;--text-main:#ecf3f4;--text-muted:#b6c4cc;--border-soft:#3b4d5a;--field-bg:#15222d;--result-bg:#243542;--result-border:#3c5360;
+ --name-start:#ffe3a1;--name-end:#9cddd5;--theme-light:#e1ecee;--theme-dark:#254b54;--focus:#efcf8a;--shadow-soft:0 10px 30px #0003;--shadow-hover:0 14px 35px #0004;
+}
+body{background:radial-gradient(ellipse at 8% 45%,var(--page-glow),transparent 54%),linear-gradient(160deg,var(--page-top),var(--page-bottom));background-attachment:fixed;transition:background-color .3s,color .3s}
+.site-header{position:relative;isolation:isolate;background:radial-gradient(ellipse at 16% 4%,var(--banner-glow),transparent 52%),radial-gradient(ellipse at 85% 100%,var(--banner-glow),transparent 54%),linear-gradient(120deg,var(--banner-start),var(--banner-end));padding-top:18px;padding-bottom:29px}
+.site-header::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.3;background-image:radial-gradient(#ffffff35 .7px,transparent .7px);background-size:24px 24px;mask-image:linear-gradient(90deg,#000,transparent 50%,#000)}
+.appearance-bar{display:flex;align-items:center;justify-content:center;gap:9px;margin:0 auto 23px;width:fit-content;max-width:calc(100% - 12px);padding:6px 10px;border:1px solid #ffffff30;border-radius:28px;background:#ffffff0c;color:var(--theme-light);font-size:.8rem;line-height:1.4}
+.appearance-bar label{white-space:nowrap;font-weight:500}
+.appearance-bar select{font:inherit;font-weight:700;color:var(--theme-light);background:var(--theme-dark);border:1px solid #ffffff35;border-radius:20px;padding:6px 10px;min-width:94px;cursor:pointer}
+.appearance-bar option{background:var(--card-bg);color:var(--text-main)}
+.motion-toggle{width:30px;height:30px;padding:0;display:grid;place-items:center;border:1px solid #ffffff35;border-radius:50%;background:transparent;color:var(--theme-light);cursor:pointer;font-size:18px}
+.header-inner{gap:16px}
+.brand-demo{position:relative;width:fit-content;max-width:100%;margin-inline:auto}
+.logo-demo{z-index:3}
+.logo-button{display:grid;place-items:center;width:140px;height:140px;padding:14px;position:relative;border:1px solid #fff9;border-radius:32px;background:linear-gradient(145deg,#fffffff5,#ffffffd9);box-shadow:0 12px 30px #0003,0 0 0 7px #ffffff0d;cursor:pointer;animation:logo-float 5s ease-in-out infinite}
+.logo-button:after{content:"";position:absolute;inset:-13px;border:1px solid #ffffff2c;border-radius:39px;pointer-events:none}
+.school-logo{height:110px;width:110px;max-width:100%;object-fit:contain;filter:drop-shadow(0 3px 4px #0002);transition:transform .25s}
+.logo-button:hover .school-logo{transform:scale(1.035)}
+.logo-button:hover{animation-play-state:paused}
+.school-name{padding:0;z-index:2;line-height:1.6}
+.school-name-button{border:0;padding:4px 9px;background:linear-gradient(110deg,var(--name-start),var(--name-end));background-clip:text;-webkit-background-clip:text;color:transparent;font:800 1.65rem/1.6 "Cairo",sans-serif;cursor:pointer;filter:drop-shadow(0 2px 6px #0002)}
+.brand-tooltip{position:absolute;top:calc(100% + 10px);left:50%;transform:translateX(-50%);z-index:20;width:max-content;max-width:min(280px,calc(100vw - 44px));padding:9px 14px;border:1px solid var(--border-soft);border-radius:11px;background:var(--card-bg);color:var(--text-main);font:500 .88rem/1.6 "Tajawal",sans-serif;box-shadow:0 8px 24px #0003;text-align:center;pointer-events:none;animation:hint-in .18s ease-out}
+.brand-tooltip:before{content:"";position:absolute;left:50%;top:-5px;width:8px;height:8px;background:var(--card-bg);transform:translateX(-50%) rotate(45deg);border-top:1px solid var(--border-soft);border-left:1px solid var(--border-soft)}
+.brand-tooltip[hidden]{display:none!important}
+.field-group input{background:var(--field-bg)}
+.result-item{background:var(--result-bg);border-color:var(--result-border)}
+.result-card{border-color:var(--result-border)}
+.btn-new-search{background:var(--field-bg)}
+.btn-new-search:hover{background:var(--result-bg)}
+.message-box.info.show{background:var(--result-bg);border-color:var(--result-border)}
+.card{animation:card-arrive .45s ease-out}
+.btn-search{box-shadow:0 6px 18px #0002}
+.btn-search:hover{box-shadow:0 10px 24px #0003}
+.logo-button:focus-visible,.school-name-button:focus-visible,.appearance-bar select:focus-visible,.motion-toggle:focus-visible{outline:3px solid var(--focus);outline-offset:5px}
+html[data-motion="paused"] .logo-button{animation:none}
+@keyframes logo-float{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-6px) rotate(1deg)}}
+@keyframes hint-in{from{opacity:0;margin-top:4px}to{opacity:1;margin-top:0}}
+@keyframes card-arrive{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:380px){.logo-button{width:124px;height:124px;padding:13px;border-radius:28px}.school-logo{height:98px;width:98px}.school-name-button{font-size:1.4rem}.appearance-bar{font-size:.76rem;margin-bottom:22px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+.logo-demo .brand-tooltip{top:calc(100% - 6px);padding-block:7px}
+html[data-theme="night"] .btn-voice{color:#123528}
